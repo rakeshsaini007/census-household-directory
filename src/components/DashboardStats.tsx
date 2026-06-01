@@ -11,7 +11,8 @@ import {
   UserCheck, 
   Clock, 
   Percent,
-  Lock
+  Lock,
+  FileText
 } from 'lucide-react';
 import { CensusRecord } from '../types';
 
@@ -47,6 +48,12 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ records, activeS
     r.householdUse && r.householdUse.trim() !== ''
   ).length;
 
+  const selfCensusCount = records.filter(r => 
+    r.residentialStatus.toUpperCase() !== 'DELETED' && 
+    r.selfCensusId && 
+    r.selfCensusId.trim() !== ''
+  ).length;
+
   const pending = active - filled;
   const completionRate = active > 0 ? Math.round((filled / active) * 100) : 0;
 
@@ -57,7 +64,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ records, activeS
   };
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-9 gap-3 mb-6">
       {/* Total Card */}
       <div 
         onClick={() => handleCardClick('total')}
@@ -163,6 +170,23 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ records, activeS
         </div>
         <div className="text-2xl font-bold font-display text-slate-800">{filled}</div>
         <p className="text-[10px] text-teal-700 font-semibold mt-1" title="लाईन क्रमांक, जनगणना भवन नंबर, जनगणना मकान नम्बर, आवासीय/गैर-आवासीय, परिवार क्रमांक/वास्तविक उपयोग पूर्ण">5 मुख्य कॉलम पूर्ण</p>
+      </div>
+
+      {/* Self Census Card */}
+      <div 
+        onClick={() => handleCardClick('self-census')}
+        className={`bg-white border rounded-2xl p-4 shadow-xs cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-[1.02] active:scale-95 ${
+          activeStat === 'self-census' ? 'border-purple-500 ring-2 ring-purple-50 bg-purple-50/10' : 'border-slate-200/80 hover:border-purple-300'
+        }`}
+      >
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-[11px] text-slate-500 font-medium">स्व जनगणना SE ID</span>
+          <div className="p-1 rounded-lg bg-purple-50">
+            <FileText className="w-4 h-4 text-purple-600" />
+          </div>
+        </div>
+        <div className="text-2xl font-bold font-display text-slate-800">{selfCensusCount}</div>
+        <p className="text-[10px] text-purple-700 font-semibold mt-1">SE ID दर्ज</p>
       </div>
 
       {/* Pending */}

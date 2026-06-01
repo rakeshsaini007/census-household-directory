@@ -16,7 +16,8 @@
 // Handle HTTP GET requests - Returns all census rows as JSON
 function doGet(e) {
   try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName("Sheet1") || ss.getSheets()[0];
     const data = sheet.getDataRange().getValues();
     
     if (data.length <= 1) {
@@ -81,7 +82,8 @@ function doPost(e) {
       return getJsonResponse({ status: "error", message: "Line number (लाईन क्रमांक) is required." });
     }
     
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName("Sheet1") || ss.getSheets()[0];
     const dataRange = sheet.getDataRange();
     const data = dataRange.getValues();
     const headers = data[0].map(h => String(h).trim());

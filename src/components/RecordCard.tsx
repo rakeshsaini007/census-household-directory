@@ -20,7 +20,8 @@ import {
   Sparkles,
   RefreshCw,
   AlertCircle,
-  Lock
+  Lock,
+  MessageCircle
 } from 'lucide-react';
 import { CensusRecord } from '../types';
 
@@ -32,6 +33,7 @@ interface RecordCardProps {
 export const RecordCard: React.FC<RecordCardProps> = ({ record, onSave }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Form State
   const [headName, setHeadName] = useState(record.headName);
@@ -65,12 +67,36 @@ export const RecordCard: React.FC<RecordCardProps> = ({ record, onSave }) => {
     setBuildingNumber(record.buildingNumber);
     setHouseNumber(record.houseNumber);
     setPlotNumber(record.plotNumber);
+    setError(null);
     setIsEditing(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setIsSaving(true);
+
+    const cleanedMobile = mobileNumber.trim();
+    if (residentialStatus.toUpperCase() !== 'DELETED' && residentialStatus.toUpperCase() !== 'LOCKED' && !cleanedMobile) {
+      setError("कृपया मोबाइल नंबर दर्ज करें। (Mobile number is required)");
+      setIsSaving(false);
+      return;
+    }
+
+    if (cleanedMobile && !/^[6-9]\d{9}$/.test(cleanedMobile)) {
+      setError("अमान्य मोबाइल नंबर! मोबाइल नंबर ठीक १० अंकों का होना चाहिए और ६, ७, ८ या ९ से शुरू होना चाहिए।");
+      setIsSaving(false);
+      return;
+    }
+
+    const cleanedSeId = selfCensusId.trim();
+    if (cleanedSeId && !/^[Hh]\d{11}$/.test(cleanedSeId)) {
+      setError("स्व जनगणना SE ID अमान्य है! यह 'H' से शुरू होना चाहिए और उसके बाद ठीक ११ अंक होने चाहिए (उदा. H12345678901)।");
+      setIsSaving(false);
+      return;
+    }
+
+    const normalizedSeId = cleanedSeId ? ('H' + cleanedSeId.substring(1)) : '';
     
     const updated: CensusRecord = {
       lineNumber: record.lineNumber,
@@ -80,8 +106,8 @@ export const RecordCard: React.FC<RecordCardProps> = ({ record, onSave }) => {
       householdUse,
       plotNumber,
       headName: headName.trim(),
-      mobileNumber: mobileNumber.trim(),
-      selfCensusId: selfCensusId.trim(),
+      mobileNumber: cleanedMobile,
+      selfCensusId: normalizedSeId,
     };
 
     const success = await onSave(updated);
@@ -162,7 +188,14 @@ export const RecordCard: React.FC<RecordCardProps> = ({ record, onSave }) => {
 
           {!isDeleted && (
             <button
-              onClick={() => isEditing ? handleCancel() : setIsEditing(true)}
+              onClick={() => {
+                if (isEditing) {
+                  handleCancel();
+                } else {
+                  setError(null);
+                  setIsEditing(true);
+                }
+              }}
               disabled={isSaving}
               className={`p-2 rounded-xl border transition-all ${
                 isEditing 
@@ -243,19 +276,44 @@ export const RecordCard: React.FC<RecordCardProps> = ({ record, onSave }) => {
                   <span className="text-[10px] text-slate-400 font-semibold tracking-wider block uppercase mb-1">
                     मोबाइल नंबर / Mobile No.
                   </span>
-                  <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${
+                  <div className={`flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl border ${
                     record.mobileNumber 
                       ? 'bg-indigo-50/30 border-indigo-100 text-slate-800 font-medium' 
                       : 'bg-amber-50/40 border-amber-100/70 text-amber-800'
                   }`}>
-                    <Phone className="w-4 h-4 shrink-0 text-slate-400" />
-                    <span className="text-sm font-mono">
-                      {record.mobileNumber || (
-                        <span className="text-amber-600/80 font-normal italic flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3" /> मोबाइल दर्ज नहीं (No Mobile)
-                        </span>
-                      )}
-                    </span>
+                    <div className="flex items-center gap-2 truncate">
+                      <Phone className="w-4 h-4 shrink-0 text-slate-400" />
+                      <span className="text-sm font-mono truncate">
+                        {record.mobileNumber || (
+                          <span className="text-amber-600/80 font-normal italic flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" /> मोबाइल दर्ज नहीं (No Mobile)
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    {record.mobileNumber && (
+                      <div className="flex items-center gap-1 shrink-0">
+                        <a
+                          href={`tel:${record.mobileNumber.replace(/\D/g, '')}`}
+                          className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 active:scale-90 transition-all shadow-xs"
+                          title="कॉल करें (Call)"
+                        >
+                          <Phone className="w-3.5 h-3.5" />
+                        </a>
+                        <a
+                          href={(() => {
+                            const digits = record.mobileNumber.replace(/\D/g, '');
+                            return `https://wa.me/${digits.length === 10 ? '91' : ''}${digits}`;
+                          })()}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-green-500 text-white hover:bg-green-600 active:scale-90 transition-all shadow-xs"
+                          title="WhatsApp चैट करें"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -326,18 +384,18 @@ export const RecordCard: React.FC<RecordCardProps> = ({ record, onSave }) => {
                   <label className="text-[10px] text-slate-500 font-semibold block mb-1">भवन नम्बर / Bldg</label>
                   <input
                     type="text"
+                    disabled
                     value={buildingNumber}
-                    onChange={(e) => setBuildingNumber(e.target.value)}
-                    className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-indigo-200"
+                    className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed select-none focus:outline-hidden"
                   />
                 </div>
                 <div>
                   <label className="text-[10px] text-slate-500 font-semibold block mb-1">मकान नम्बर / House</label>
                   <input
                     type="text"
+                    disabled
                     value={houseNumber}
-                    onChange={(e) => setHouseNumber(e.target.value)}
-                    className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-indigo-200"
+                    className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed select-none focus:outline-hidden"
                   />
                 </div>
                 <div>
@@ -358,9 +416,9 @@ export const RecordCard: React.FC<RecordCardProps> = ({ record, onSave }) => {
                   <label className="text-[10px] text-slate-500 font-semibold block mb-1">प्लॉट नम्बर / Plot</label>
                   <input
                     type="text"
+                    disabled
                     value={plotNumber}
-                    onChange={(e) => setPlotNumber(e.target.value)}
-                    className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-indigo-200"
+                    className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed select-none focus:outline-hidden"
                   />
                 </div>
               </div>
@@ -422,6 +480,13 @@ export const RecordCard: React.FC<RecordCardProps> = ({ record, onSave }) => {
                   />
                 </div>
               </div>
+
+              {error && (
+                <div role="alert" className="p-2.5 bg-rose-50 border border-rose-100/80 text-rose-700 text-xs rounded-xl flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-500 mt-0.5" />
+                  <span className="font-semibold">{error}</span>
+                </div>
+              )}
 
               {/* Buttons Panel - Submit vs Update dynamically */}
               <div className="flex gap-2 pt-2">

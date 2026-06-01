@@ -329,6 +329,8 @@ export default function App() {
             record.residentialStatus && record.residentialStatus.trim() !== '' &&
             record.householdUse && record.householdUse.trim() !== ''
           );
+      } else if (drillDownStat === 'self-census') {
+        matchesDrillDown = record.residentialStatus.toUpperCase() !== 'DELETED' && Boolean(record.selfCensusId && record.selfCensusId.trim() !== '');
       } else if (drillDownStat === 'pending') {
         const isDeletedOrLocked = record.residentialStatus.toUpperCase() === 'DELETED' || record.residentialStatus.toUpperCase() === 'LOCKED';
         const isCompleted = Boolean(
@@ -598,6 +600,7 @@ export default function App() {
               drillDownStat === 'non-residential' ? 'bg-blue-50 border-blue-200 text-blue-700' :
               drillDownStat === 'locked' ? 'bg-orange-50 border-orange-200 text-orange-700' :
               drillDownStat === 'completed' ? 'bg-teal-50 border-teal-200 text-teal-700' :
+              drillDownStat === 'self-census' ? 'bg-purple-50 border-purple-200 text-purple-700' :
               'bg-amber-50 border-amber-200 text-amber-700'
             } flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs`}>
               <div className="flex items-start gap-3">
@@ -616,6 +619,7 @@ export default function App() {
                      drillDownStat === 'non-residential' ? 'गैर-आवासीय मकान/भवन (Non-Residential)' :
                      drillDownStat === 'locked' ? 'तालाबंद मकान (Locked)' :
                      drillDownStat === 'completed' ? 'पूर्ण विवरण रिकॉर्ड (Completed)' :
+                     drillDownStat === 'self-census' ? 'स्व जनगणना SE ID (Self Census)' :
                      'लंबित / अपूर्ण विवरण (Pending)'}
                     <span className={`text-xs text-white ${
                       drillDownStat === 'total' ? 'bg-indigo-600' :
@@ -624,6 +628,7 @@ export default function App() {
                       drillDownStat === 'non-residential' ? 'bg-blue-600' :
                       drillDownStat === 'locked' ? 'bg-orange-600' :
                       drillDownStat === 'completed' ? 'bg-teal-600' :
+                      drillDownStat === 'self-census' ? 'bg-purple-600' :
                       'bg-amber-600'
                     } px-2.5 py-0.5 rounded-full font-sans font-semibold ml-2`}>
                       {sortedRecords.length} रिकॉर्ड्स
@@ -636,6 +641,7 @@ export default function App() {
                      drillDownStat === 'non-residential' ? 'व्यावसायिक, सरकारी या अन्य गैर-आवासीय उपयोग की इमारतें' :
                      drillDownStat === 'locked' ? 'वर्गीकृत बंद या तालाबंद मकानों की सूची' :
                      drillDownStat === 'completed' ? 'मकान जिनकी सभी ५ मुख्य जानकारियां पूर्ण रूप से भरी जा चुकी हैं' :
+                     drillDownStat === 'self-census' ? 'मकान या परिवार जिनकी स्व जनगणना SE ID दर्ज है (Self Census)' :
                      'मकान जहां अभी मुख्य जानकारियां भरी जानी शेष हैं'}
                   </p>
                 </div>
