@@ -569,7 +569,7 @@ export default function App() {
               <div>
                 {/* Show search results string */}
                 <div className="mb-4 flex items-center justify-between text-xs text-slate-400 font-medium px-1">
-                  <span>कुल <span className="font-semibold text-slate-700 font-sans">{sortedRecords.length}</span> मकान प्रदर्शित हो रहे हैं</span>
+                  <span>कुल <span className="font-semibold text-slate-700 font-sans">{sortedRecords.length}</span> लाईन प्रदर्शित हो रहे हैं</span>
                   {searchQuery && (
                     <span>खोज परिणाम: <span className="italic text-indigo-600">"{searchQuery}"</span></span>
                   )}
