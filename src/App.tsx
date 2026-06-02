@@ -287,6 +287,30 @@ export default function App() {
     }, 200);
   };
 
+  // Helper to check if a record is completed based on conditional mandatory fields
+  const isRecordCompleted = (record: CensusRecord): boolean => {
+    const statusUpper = record.residentialStatus.toUpperCase();
+    if (statusUpper === 'DELETED' || statusUpper === 'LOCKED') {
+      return false;
+    }
+    if (record.residentialStatus === 'आवासीय') {
+      // For Residential: Head Name, Household Use, and Mobile Number are required
+      return Boolean(
+        record.headName && record.headName.trim() !== '' &&
+        record.householdUse && record.householdUse.trim() !== '' &&
+        record.mobileNumber && record.mobileNumber.trim() !== ''
+      );
+    } else {
+      // For options other than "आवासीय" (like non-residential), those fields are not mandatory
+      return Boolean(
+        record.lineNumber && record.lineNumber.trim() !== '' &&
+        record.buildingNumber && record.buildingNumber.trim() !== '' &&
+        record.houseNumber && record.houseNumber.trim() !== '' &&
+        record.residentialStatus && record.residentialStatus.trim() !== ''
+      );
+    }
+  };
+
   // Extract unique plot numbers for plot dropdown filters
   const uniquePlots = Array.from(
     new Set(records.map(r => r.plotNumber).filter(Boolean))
@@ -320,27 +344,13 @@ export default function App() {
       } else if (drillDownStat === 'locked') {
         matchesDrillDown = record.residentialStatus.toUpperCase() === 'LOCKED';
       } else if (drillDownStat === 'completed') {
-        matchesDrillDown = record.residentialStatus.toUpperCase() !== 'DELETED' && 
-          record.residentialStatus.toUpperCase() !== 'LOCKED' && 
-          Boolean(
-            record.lineNumber && record.lineNumber.trim() !== '' &&
-            record.buildingNumber && record.buildingNumber.trim() !== '' &&
-            record.houseNumber && record.houseNumber.trim() !== '' &&
-            record.residentialStatus && record.residentialStatus.trim() !== '' &&
-            record.householdUse && record.householdUse.trim() !== ''
-          );
+        matchesDrillDown = isRecordCompleted(record);
       } else if (drillDownStat === 'self-census') {
         matchesDrillDown = record.residentialStatus.toUpperCase() !== 'DELETED' && Boolean(record.selfCensusId && record.selfCensusId.trim() !== '');
       } else if (drillDownStat === 'pending') {
-        const isDeletedOrLocked = record.residentialStatus.toUpperCase() === 'DELETED' || record.residentialStatus.toUpperCase() === 'LOCKED';
-        const isCompleted = Boolean(
-          record.lineNumber && record.lineNumber.trim() !== '' &&
-          record.buildingNumber && record.buildingNumber.trim() !== '' &&
-          record.houseNumber && record.houseNumber.trim() !== '' &&
-          record.residentialStatus && record.residentialStatus.trim() !== '' &&
-          record.householdUse && record.householdUse.trim() !== ''
-        );
-        matchesDrillDown = !isDeletedOrLocked && !isCompleted;
+        matchesDrillDown = record.residentialStatus.toUpperCase() !== 'DELETED' && 
+          record.residentialStatus.toUpperCase() !== 'LOCKED' && 
+          !isRecordCompleted(record);
       }
     }
 
@@ -358,9 +368,9 @@ export default function App() {
       } else if (statusFilter === 'locked') {
         matchesStatus = record.residentialStatus.toUpperCase() === 'LOCKED';
       } else if (statusFilter === 'completed') {
-        matchesStatus = record.residentialStatus.toUpperCase() !== 'DELETED' && record.residentialStatus.toUpperCase() !== 'LOCKED' && Boolean(record.headName && record.mobileNumber);
+        matchesStatus = isRecordCompleted(record);
       } else if (statusFilter === 'incomplete') {
-        matchesStatus = record.residentialStatus.toUpperCase() !== 'DELETED' && record.residentialStatus.toUpperCase() !== 'LOCKED' && (!record.headName || !record.mobileNumber);
+        matchesStatus = record.residentialStatus.toUpperCase() !== 'DELETED' && record.residentialStatus.toUpperCase() !== 'LOCKED' && !isRecordCompleted(record);
       }
     }
 
@@ -420,14 +430,6 @@ export default function App() {
             >
               <RefreshCw className={`w-4 h-4 text-slate-500 ${loading ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">ताज़ा करें</span>
-            </button>
-
-            <button
-              onClick={() => setIsSettingsOpen(true)}
-              className="p-2.5 bg-white border border-indigo-200 hover:bg-indigo-50/50 text-indigo-700 rounded-xl transition-all shadow-xs cursor-pointer inline-flex items-center gap-2 font-semibold text-xs"
-            >
-              <Settings className="w-4 h-4 text-indigo-600 animate-spin-slow" />
-              <span>सेटअप / Apps Script</span>
             </button>
           </div>
         </header>

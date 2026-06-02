@@ -134,7 +134,7 @@ function doPost(e) {
       const editableFields = ["headName", "mobileNumber", "selfCensusId", "residentialStatus", "householdUse", "plotNumber", "buildingNumber", "houseNumber"];
       editableFields.forEach(field => {
         if (payload[field] !== undefined && colIndices[field]) {
-          sheet.getCell(targetRowIndex, colIndices[field]).setValue(payload[field]);
+          sheet.getRange(targetRowIndex, colIndices[field]).setValue(payload[field]);
         }
       });
     } else {

@@ -38,15 +38,28 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ records, activeS
   const nonResidential = records.filter(r => r.residentialStatus === 'गैर-आवासीय').length;
   
   // Filled records (completed)
-  const filled = records.filter(r => 
-    r.residentialStatus.toUpperCase() !== 'DELETED' && 
-    r.residentialStatus.toUpperCase() !== 'LOCKED' && 
-    r.lineNumber && r.lineNumber.trim() !== '' &&
-    r.buildingNumber && r.buildingNumber.trim() !== '' &&
-    r.houseNumber && r.houseNumber.trim() !== '' &&
-    r.residentialStatus && r.residentialStatus.trim() !== '' &&
-    r.householdUse && r.householdUse.trim() !== ''
-  ).length;
+  const filled = records.filter(r => {
+    const statusUpper = r.residentialStatus.toUpperCase();
+    if (statusUpper === 'DELETED' || statusUpper === 'LOCKED') {
+      return false;
+    }
+    if (r.residentialStatus === 'आवासीय') {
+      // For Residential: Head Name, Household Use, and Mobile Number are required
+      return Boolean(
+        r.headName && r.headName.trim() !== '' &&
+        r.householdUse && r.householdUse.trim() !== '' &&
+        r.mobileNumber && r.mobileNumber.trim() !== ''
+      );
+    } else {
+      // For options other than "आवासीय" (like non-residential), key fields are not mandatory
+      return Boolean(
+        r.lineNumber && r.lineNumber.trim() !== '' &&
+        r.buildingNumber && r.buildingNumber.trim() !== '' &&
+        r.houseNumber && r.houseNumber.trim() !== '' &&
+        r.residentialStatus && r.residentialStatus.trim() !== ''
+      );
+    }
+  }).length;
 
   const selfCensusCount = records.filter(r => 
     r.residentialStatus.toUpperCase() !== 'DELETED' && 

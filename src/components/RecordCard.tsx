@@ -77,10 +77,26 @@ export const RecordCard: React.FC<RecordCardProps> = ({ record, onSave }) => {
     setIsSaving(true);
 
     const cleanedMobile = mobileNumber.trim();
-    if (residentialStatus.toUpperCase() !== 'DELETED' && residentialStatus.toUpperCase() !== 'LOCKED' && !cleanedMobile) {
-      setError("कृपया मोबाइल नंबर दर्ज करें। (Mobile number is required)");
-      setIsSaving(false);
-      return;
+    const cleanedHeadName = headName.trim();
+    const cleanedHouseholdUse = householdUse.trim();
+
+    // Conditional requirements only when residential status is "आवासीय"
+    if (residentialStatus === 'आवासीय') {
+      if (!cleanedHouseholdUse) {
+        setError("कृपया परिवार क्रमांक/वास्तविक उपयोग दर्ज करें। (Family Number / Use is required for Residential status)");
+        setIsSaving(false);
+        return;
+      }
+      if (!cleanedHeadName) {
+        setError("कृपया परिवार के मुखिया का नाम दर्ज करें। (Head of Family is required for Residential status)");
+        setIsSaving(false);
+        return;
+      }
+      if (!cleanedMobile) {
+        setError("कृपया मोबाइल नंबर दर्ज करें। (Mobile number is required for Residential status)");
+        setIsSaving(false);
+        return;
+      }
     }
 
     if (cleanedMobile && !/^[6-9]\d{9}$/.test(cleanedMobile)) {
@@ -103,9 +119,9 @@ export const RecordCard: React.FC<RecordCardProps> = ({ record, onSave }) => {
       buildingNumber,
       houseNumber,
       residentialStatus,
-      householdUse,
+      householdUse: cleanedHouseholdUse,
       plotNumber,
-      headName: headName.trim(),
+      headName: cleanedHeadName,
       mobileNumber: cleanedMobile,
       selfCensusId: normalizedSeId,
     };
@@ -243,7 +259,7 @@ export const RecordCard: React.FC<RecordCardProps> = ({ record, onSave }) => {
                   </div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">वास्तविक उपयोग / Use</div>
+                  <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">परिवार क्रमांक/वास्तविक उपयोग</div>
                   <div className="text-xs font-semibold text-indigo-600 truncate mt-0.5" title={record.householdUse}>
                     {record.householdUse || <span className="text-slate-400 font-normal italic">कोई नहीं</span>}
                   </div>
@@ -424,9 +440,12 @@ export const RecordCard: React.FC<RecordCardProps> = ({ record, onSave }) => {
               </div>
 
               <div>
-                <label className="text-[10px] text-slate-500 font-semibold block mb-1">मकान उपयोग / Household Use</label>
+                <label className="text-[10px] text-slate-500 font-semibold block mb-1">
+                  परिवार क्रमांक/वास्तविक उपयोग {residentialStatus === 'आवासीय' && <span className="text-rose-500">*</span>}
+                </label>
                 <input
                   type="text"
+                  required={residentialStatus === 'आवासीय'}
                   value={householdUse}
                   onChange={(e) => setHouseholdUse(e.target.value)}
                   placeholder="उदा. HOTEL, BALAJI PG, 002"
@@ -438,12 +457,14 @@ export const RecordCard: React.FC<RecordCardProps> = ({ record, onSave }) => {
 
               {/* Main Inputs: Family, Mobile, Census id */}
               <div>
-                <label className="text-[10px] text-slate-500 font-semibold block mb-1">परिवार के मुखिया का नाम (Head of Family)</label>
+                <label className="text-[10px] text-slate-500 font-semibold block mb-1">
+                  परिवार के मुखिया का नाम (Head of Family) {residentialStatus === 'आवासीय' && <span className="text-rose-500">*</span>}
+                </label>
                 <div className="relative">
                   <User className="absolute left-2.5 top-2 w-4 h-4 text-slate-400" />
                   <input
                     type="text"
-                    required
+                    required={residentialStatus === 'आवासीय'}
                     value={headName}
                     onChange={(e) => setHeadName(e.target.value)}
                     placeholder="मुखिया का पूरा नाम दर्ज करें"
@@ -453,12 +474,15 @@ export const RecordCard: React.FC<RecordCardProps> = ({ record, onSave }) => {
               </div>
 
               <div>
-                <label className="text-[10px] text-slate-500 font-semibold block mb-1">मोबाइल नंबर (Mobile Number)</label>
+                <label className="text-[10px] text-slate-500 font-semibold block mb-1">
+                  मोबाइल नंबर (Mobile Number) {residentialStatus === 'आवासीय' && <span className="text-rose-500">*</span>}
+                </label>
                 <div className="relative">
                   <Phone className="absolute left-2.5 top-2 w-4 h-4 text-slate-400" />
                   <input
                     type="tel"
                     maxLength={10}
+                    required={residentialStatus === 'आवासीय'}
                     value={mobileNumber}
                     onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, ''))}
                     placeholder="10 अंकों का मोबाइल नंबर"
